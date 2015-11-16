@@ -1,0 +1,5 @@
+[package]
+
+name = "gluj"
+version = "0.0.1"
+authors = ["Jimmie Elvenmark <flugsio@gmail.com>"]
