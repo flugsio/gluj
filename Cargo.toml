@@ -3,3 +3,7 @@
 name = "gluj"
 version = "0.0.1"
 authors = ["Jimmie Elvenmark <flugsio@gmail.com>"]
+
+[dependencies]
+chrono = "0.2.16"
+csv = "0.14.3"
