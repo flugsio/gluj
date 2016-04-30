@@ -1,9 +1,9 @@
 [package]
 
 name = "gluj"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Jimmie Elvenmark <flugsio@gmail.com>"]
 
 [dependencies]
-chrono = "0.2.16"
-csv = "0.14.3"
+chrono = "0.2.22"
+csv = "0.14.4"
