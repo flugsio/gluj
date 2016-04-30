@@ -10,6 +10,7 @@ pub struct Entry {
 }
 
 pub struct View {
+    latest_time: DateTime<UTC>,
     entries: HashMap<DateTime<UTC>, Vec<Entry>>,
 }
 
@@ -17,14 +18,16 @@ pub struct View {
 enum Show {
     Empty,
     Timeline,
+    Waitline,
     Glucose(i64),
 }
 
 impl fmt::Display for Show {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            &Show::Empty      => write!(f, "{}", "-"),
+            &Show::Empty      => write!(f, "{}", " "),
             &Show::Timeline   => write!(f, "{}", "|"),
+            &Show::Waitline   => write!(f, "{}", "-"),
             &Show::Glucose(x) if x < 0 || x > 33
                               => write!(f, "?"),
             &Show::Glucose(x) => {
@@ -39,12 +42,14 @@ impl fmt::Display for Show {
 impl View {
     pub fn new(entries: Vec<Entry>) -> View {
         let mut grouped_entries = HashMap::new();
+        let latest_time = entries.last().unwrap().at.clone();
         for entry in entries {
             let rounded = floor_time(entry.at);
             let list = grouped_entries.entry(rounded).or_insert(Vec::new());
             list.push(entry);
         }
         View {
+            latest_time: latest_time,
             entries: grouped_entries,
         }
     }
@@ -64,6 +69,7 @@ impl View {
         match self.entries.get(&time) {
             Some(entry) => Show::Glucose(entry.last().unwrap().glucose),
             None if even_full_hour(time) => Show::Timeline,
+            None if (self.latest_time < time) => Show::Waitline,
             None => Show::Empty,
         }
     }
