@@ -11,8 +11,8 @@ mod graph;
 fn main() {
     let entries = load_entries("/home/flugsio/.glucose");
     let now = UTC::now();
-    let graph = graph::View::new(now, entries);
-    println!("{}", graph.render());
+    let graph = graph::View::new(entries);
+    println!("{}", graph.render(now));
 }
 
 fn load_entries(path: &str) -> Vec<graph::Entry> {

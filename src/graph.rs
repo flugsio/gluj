@@ -10,7 +10,6 @@ pub struct Entry {
 }
 
 pub struct View {
-    to: DateTime<UTC>,
     entries: HashMap<DateTime<UTC>, Vec<Entry>>,
 }
 
@@ -38,7 +37,7 @@ impl fmt::Display for Show {
 }
 
 impl View {
-    pub fn new(to: DateTime<UTC>, entries: Vec<Entry>) -> View {
+    pub fn new(entries: Vec<Entry>) -> View {
         let mut grouped_entries = HashMap::new();
         for entry in entries {
             let rounded = floor_time(entry.at);
@@ -46,28 +45,27 @@ impl View {
             list.push(entry);
         }
         View {
-            to: floor_time(to),
             entries: grouped_entries,
         }
     }
 
-    // TODO: wtf is this mess
-    pub fn render(&self) -> String {
-        let mut source = [Show::Empty; 32];
+    pub fn render(&self, to: DateTime<UTC>) -> String {
         let mut buffer = String::new();
-        let mut now = self.to;
-        for i in 0..source.len() {
-            if now.minute() == 0 && now.hour() % 2 == 0 {
-                source[i] = Show::Timeline;
-            }
-            match self.entries.get(&now) {
-                Some(entry) => source[i] = Show::Glucose(entry.last().unwrap().glucose),
-                _ => ()
-            }
-            buffer = format!("{}{}", source[i], buffer);
-            now = now - Duration::minutes(15);
+        let entries = (0..32).map(|i|
+            self.entry_for(floor_time(to) - Duration::minutes(i * 15))
+        );
+        for entry in entries {
+            buffer = format!("{}{}", entry, buffer);
         }
         return buffer;
+    }
+
+    fn entry_for(&self, time: DateTime<UTC>) -> Show {
+        match self.entries.get(&time) {
+            Some(entry) => Show::Glucose(entry.last().unwrap().glucose),
+            None if even_full_hour(time) => Show::Timeline,
+            None => Show::Empty,
+        }
     }
 
 }
@@ -76,6 +74,10 @@ impl View {
 fn floor_time(dt: DateTime<UTC>) -> DateTime<UTC> {
     let minute = dt.minute() / 15 * 15;
     UTC.ymd(dt.year(), dt.month(), dt.day()).and_hms(dt.hour(), minute, 0)
+}
+
+fn even_full_hour(time: DateTime<UTC>) -> bool {
+    time.minute() == 0 && time.hour() % 2 == 0
 }
 
 
@@ -127,16 +129,17 @@ mod tests {
     #[test]
     pub fn test_render_eight_empty_hours() {
         let entries = vec!();
+        let view = View::new(entries);
         let even_hour      = UTC.ymd(2015, 1, 15).and_hms(12,  0, 0);
         let even_hour_15   = UTC.ymd(2015, 1, 15).and_hms(12, 15, 0);
         let even_hour_30   = UTC.ymd(2015, 1, 15).and_hms(12, 30, 0);
         let uneven_hour    = UTC.ymd(2015, 1, 15).and_hms(13,  0, 0);
         let uneven_hour_30 = UTC.ymd(2015, 1, 15).and_hms(13, 30, 0);
-        assert_eq!("-------|-------|-------|-------|".to_string(), View::new(even_hour, entries.clone()).render());
-        assert_eq!("------|-------|-------|-------|-".to_string(), View::new(even_hour_15, entries.clone()).render());
-        assert_eq!("-----|-------|-------|-------|--".to_string(), View::new(even_hour_30, entries.clone()).render());
-        assert_eq!("---|-------|-------|-------|----".to_string(), View::new(uneven_hour, entries.clone()).render());
-        assert_eq!("-|-------|-------|-------|------".to_string(), View::new(uneven_hour_30, entries.clone()).render());
+        assert_eq!("-------|-------|-------|-------|".to_string(), view.render(even_hour));
+        assert_eq!("------|-------|-------|-------|-".to_string(), view.render(even_hour_15));
+        assert_eq!("-----|-------|-------|-------|--".to_string(), view.render(even_hour_30));
+        assert_eq!("---|-------|-------|-------|----".to_string(), view.render(uneven_hour));
+        assert_eq!("-|-------|-------|-------|------".to_string(), view.render(uneven_hour_30));
     }
 
     #[test]
@@ -144,6 +147,6 @@ mod tests {
         let entry_date = UTC.ymd(2015, 1, 15).and_hms(11, 5, 30);
         let show_date  = UTC.ymd(2015, 1, 15).and_hms(12, 0,  0);
         let entries = vec!(Entry { at: entry_date, glucose: 7 } );
-        assert_eq!("-------|-------|-------|---7---|".to_string(), View::new(show_date, entries).render());
+        assert_eq!("-------|-------|-------|---7---|".to_string(), View::new(entries).render(show_date));
     }
 }
