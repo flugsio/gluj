@@ -15,36 +15,37 @@ pub struct View {
 }
 
 #[derive(Clone, Copy)]
-enum Show {
+enum Grapheme {
     Empty,
     Timeline,
     Waitline,
     Glucose(f32),
 }
 
-impl fmt::Display for Show {
+impl fmt::Display for Grapheme {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            &Show::Empty      => write!(f, " "),
-            &Show::Timeline   => write!(f, "|"),
-            &Show::Waitline   => write!(f, "-"),
-            &Show::Glucose(x) if -1.0 < x && x < 34.0 => {
-                let y = char::from_digit(x as u32, 36).unwrap().to_uppercase().next().unwrap();
+            &Grapheme::Empty      => write!(f, " "),
+            &Grapheme::Timeline   => write!(f, "|"),
+            &Grapheme::Waitline   => write!(f, "-"),
+            &Grapheme::Glucose(x) if -1.0 < x && x < 34.0 => {
+                let y = char::from_digit(x.round() as u32, 36).unwrap().to_uppercase().next().unwrap();
                 write!(f, "{}", y)
             },
-            &Show::Glucose(_) => write!(f, "?"),
+            &Grapheme::Glucose(_) => write!(f, "?"),
         }
     }
 }
 
 impl View {
     pub fn new(entries: Vec<Entry>) -> View {
-        let mut grouped_entries = HashMap::new();
         let latest = entries.last().map(|e| e.at.clone());
+        let mut grouped_entries = HashMap::new();
         for entry in entries {
-            let rounded = floor_time(entry.at);
-            let list = grouped_entries.entry(rounded).or_insert(Vec::new());
-            list.push(entry);
+            grouped_entries
+                .entry(floor_time(entry.at))
+                .or_insert(Vec::new())
+                .push(entry);
         }
         View {
             latest: latest,
@@ -54,22 +55,22 @@ impl View {
 
     pub fn render(&self, to: DateTime<UTC>) -> String {
         let mut buffer = String::new();
-        let entries = (0..32).map(|i|
-            self.entry_for(floor_time(to) - Duration::minutes(i * 15))
+        let graphemes = (0..32).map(|i|
+            self.grapheme_at(floor_time(to) - Duration::minutes(i * 15))
         );
-        for entry in entries {
+        for entry in graphemes {
             buffer = format!("{}{}", entry, buffer);
         }
         return buffer;
     }
 
-    fn entry_for(&self, time: DateTime<UTC>) -> Show {
+    fn grapheme_at(&self, time: DateTime<UTC>) -> Grapheme {
         match self.entries.get(&time) {
-            Some(entry) => Show::Glucose(entry.last().unwrap().glucose),
-            None if even_full_hour(time) => Show::Timeline,
+            Some(entry) => Grapheme::Glucose(entry.last().unwrap().glucose),
+            None if even_full_hour(time) => Grapheme::Timeline,
             None => match self.latest {
-                Some(latest) if (time < latest) => Show::Empty,
-                _ => Show::Waitline,
+                Some(latest) if (time < latest) => Grapheme::Empty,
+                _ => Grapheme::Waitline,
             },
         }
     }
@@ -91,36 +92,36 @@ fn even_full_hour(time: DateTime<UTC>) -> bool {
 mod tests {
     use chrono::*;
     use super::Entry;
-    use super::Show;
+    use super::Grapheme;
     use super::View;
 
     #[test]
     pub fn test_glucose_letter_representation() {
         // implementation needs to cover 0-33
-        assert_eq!("0", Show::Glucose(0.0).to_string());
-        assert_eq!("1", Show::Glucose(1.0).to_string());
-        assert_eq!("2", Show::Glucose(2.0).to_string());
-        assert_eq!("3", Show::Glucose(3.0).to_string());
-        assert_eq!("4", Show::Glucose(4.0).to_string());
-        assert_eq!("5", Show::Glucose(5.0).to_string());
-        assert_eq!("6", Show::Glucose(6.0).to_string());
-        assert_eq!("7", Show::Glucose(7.0).to_string());
-        assert_eq!("8", Show::Glucose(8.0).to_string());
-        assert_eq!("9", Show::Glucose(9.0).to_string());
-        assert_eq!("A", Show::Glucose(10.0).to_string());
-        assert_eq!("B", Show::Glucose(11.0).to_string());
-        assert_eq!("C", Show::Glucose(12.0).to_string());
-        assert_eq!("D", Show::Glucose(13.0).to_string());
-        assert_eq!("E", Show::Glucose(14.0).to_string());
-        assert_eq!("F", Show::Glucose(15.0).to_string());
-        assert_eq!("G", Show::Glucose(16.0).to_string());
+        assert_eq!("0", Grapheme::Glucose(0.0).to_string());
+        assert_eq!("1", Grapheme::Glucose(1.0).to_string());
+        assert_eq!("2", Grapheme::Glucose(2.0).to_string());
+        assert_eq!("3", Grapheme::Glucose(3.0).to_string());
+        assert_eq!("4", Grapheme::Glucose(4.0).to_string());
+        assert_eq!("5", Grapheme::Glucose(5.0).to_string());
+        assert_eq!("6", Grapheme::Glucose(6.0).to_string());
+        assert_eq!("7", Grapheme::Glucose(7.0).to_string());
+        assert_eq!("8", Grapheme::Glucose(8.0).to_string());
+        assert_eq!("9", Grapheme::Glucose(9.0).to_string());
+        assert_eq!("A", Grapheme::Glucose(10.0).to_string());
+        assert_eq!("B", Grapheme::Glucose(11.0).to_string());
+        assert_eq!("C", Grapheme::Glucose(12.0).to_string());
+        assert_eq!("D", Grapheme::Glucose(13.0).to_string());
+        assert_eq!("E", Grapheme::Glucose(14.0).to_string());
+        assert_eq!("F", Grapheme::Glucose(15.0).to_string());
+        assert_eq!("G", Grapheme::Glucose(16.0).to_string());
 
-        assert_eq!("U", Show::Glucose(30.0).to_string());
-        assert_eq!("X", Show::Glucose(33.0).to_string());
+        assert_eq!("U", Grapheme::Glucose(30.0).to_string());
+        assert_eq!("X", Grapheme::Glucose(33.0).to_string());
 
         // test out of range
-        assert_eq!("?", Show::Glucose(-1.0).to_string());
-        assert_eq!("?", Show::Glucose(34.0).to_string());
+        assert_eq!("?", Grapheme::Glucose(-1.0).to_string());
+        assert_eq!("?", Grapheme::Glucose(34.0).to_string());
     }
 
     #[test]
