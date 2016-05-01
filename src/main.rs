@@ -27,7 +27,7 @@ fn load_entries(path: std::path::PathBuf) -> Vec<graph::Entry> {
     let mut rdr = csv::Reader::from_string(data).has_headers(false);
     let mut list = Vec::new();
     for row in rdr.decode() {
-        let (date, glucose): (String, i64) = row.unwrap();
+        let (date, glucose): (String, f32) = row.unwrap();
         list.push(graph::Entry { at: date.parse::<DateTime<UTC>>().unwrap(), glucose: glucose });
     }
     list

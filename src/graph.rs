@@ -6,7 +6,7 @@ use std::collections::HashMap;
 #[derive(Clone, Copy)]
 pub struct Entry {
     pub at: DateTime<UTC>,
-    pub glucose: i64,
+    pub glucose: f32,
 }
 
 pub struct View {
@@ -19,7 +19,7 @@ enum Show {
     Empty,
     Timeline,
     Waitline,
-    Glucose(i64),
+    Glucose(f32),
 }
 
 impl fmt::Display for Show {
@@ -28,7 +28,7 @@ impl fmt::Display for Show {
             &Show::Empty      => write!(f, " "),
             &Show::Timeline   => write!(f, "|"),
             &Show::Waitline   => write!(f, "-"),
-            &Show::Glucose(x) if -1 < x && x < 34 => {
+            &Show::Glucose(x) if -1.0 < x && x < 34.0 => {
                 let y = char::from_digit(x as u32, 36).unwrap().to_uppercase().next().unwrap();
                 write!(f, "{}", y)
             },
@@ -97,30 +97,30 @@ mod tests {
     #[test]
     pub fn test_glucose_letter_representation() {
         // implementation needs to cover 0-33
-        assert_eq!("0", Show::Glucose(0).to_string());
-        assert_eq!("1", Show::Glucose(1).to_string());
-        assert_eq!("2", Show::Glucose(2).to_string());
-        assert_eq!("3", Show::Glucose(3).to_string());
-        assert_eq!("4", Show::Glucose(4).to_string());
-        assert_eq!("5", Show::Glucose(5).to_string());
-        assert_eq!("6", Show::Glucose(6).to_string());
-        assert_eq!("7", Show::Glucose(7).to_string());
-        assert_eq!("8", Show::Glucose(8).to_string());
-        assert_eq!("9", Show::Glucose(9).to_string());
-        assert_eq!("A", Show::Glucose(10).to_string());
-        assert_eq!("B", Show::Glucose(11).to_string());
-        assert_eq!("C", Show::Glucose(12).to_string());
-        assert_eq!("D", Show::Glucose(13).to_string());
-        assert_eq!("E", Show::Glucose(14).to_string());
-        assert_eq!("F", Show::Glucose(15).to_string());
-        assert_eq!("G", Show::Glucose(16).to_string());
+        assert_eq!("0", Show::Glucose(0.0).to_string());
+        assert_eq!("1", Show::Glucose(1.0).to_string());
+        assert_eq!("2", Show::Glucose(2.0).to_string());
+        assert_eq!("3", Show::Glucose(3.0).to_string());
+        assert_eq!("4", Show::Glucose(4.0).to_string());
+        assert_eq!("5", Show::Glucose(5.0).to_string());
+        assert_eq!("6", Show::Glucose(6.0).to_string());
+        assert_eq!("7", Show::Glucose(7.0).to_string());
+        assert_eq!("8", Show::Glucose(8.0).to_string());
+        assert_eq!("9", Show::Glucose(9.0).to_string());
+        assert_eq!("A", Show::Glucose(10.0).to_string());
+        assert_eq!("B", Show::Glucose(11.0).to_string());
+        assert_eq!("C", Show::Glucose(12.0).to_string());
+        assert_eq!("D", Show::Glucose(13.0).to_string());
+        assert_eq!("E", Show::Glucose(14.0).to_string());
+        assert_eq!("F", Show::Glucose(15.0).to_string());
+        assert_eq!("G", Show::Glucose(16.0).to_string());
 
-        assert_eq!("U", Show::Glucose(30).to_string());
-        assert_eq!("X", Show::Glucose(33).to_string());
+        assert_eq!("U", Show::Glucose(30.0).to_string());
+        assert_eq!("X", Show::Glucose(33.0).to_string());
 
         // test out of range
-        assert_eq!("?", Show::Glucose(-1).to_string());
-        assert_eq!("?", Show::Glucose(34).to_string());
+        assert_eq!("?", Show::Glucose(-1.0).to_string());
+        assert_eq!("?", Show::Glucose(34.0).to_string());
     }
 
     #[test]
@@ -152,7 +152,7 @@ mod tests {
     pub fn test_entry() {
         let entry_date = UTC.ymd(2015, 1, 15).and_hms(11, 5, 30);
         let show_date  = UTC.ymd(2015, 1, 15).and_hms(12, 0,  0);
-        let entries = vec!(Entry { at: entry_date, glucose: 7 } );
+        let entries = vec!(Entry { at: entry_date, glucose: 7.0 } );
         assert_eq!("       |       |       |   7---|".to_string(), View::new(entries).render(show_date));
     }
 }
