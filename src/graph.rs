@@ -53,6 +53,19 @@ impl View {
         }
     }
 
+    // TODO: refactor
+    pub fn render_day(&self, day: DateTime<UTC>) -> String {
+        let mut buffer = String::new();
+        let start = start_of_day(day);
+        let entries = (0..(24*60/15-1)).map(|i|
+            self.grapheme_at(start + Duration::minutes(i * 15))
+        );
+        for entry in entries {
+            buffer = format!("{}{}", buffer, entry);
+        }
+        return buffer;
+    }
+
     pub fn render(&self, to: DateTime<UTC>) -> String {
         let mut buffer = String::new();
         let graphemes = (0..32).map(|i|
@@ -75,6 +88,10 @@ impl View {
         }
     }
 
+}
+
+fn start_of_day(dt: DateTime<UTC>) -> DateTime<UTC> {
+    UTC.ymd(dt.year(), dt.month(), dt.day()).and_hms(2, 0, 0) // TODO: timezone
 }
 
 /// Floor datetime down to nearest 15 minute block
