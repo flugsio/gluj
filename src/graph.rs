@@ -3,11 +3,7 @@ use std::fmt;
 use std::char;
 use std::collections::HashMap;
 
-#[derive(Clone, Copy)]
-pub struct Entry {
-    pub at: DateTime<UTC>,
-    pub glucose: f32,
-}
+use entry::Entry;
 
 pub struct View {
     latest: Option<DateTime<UTC>>,
@@ -66,7 +62,7 @@ impl View {
         return buffer;
     }
 
-    pub fn render(&self, to: DateTime<UTC>) -> String {
+    pub fn render_recent(&self, to: DateTime<UTC>) -> String {
         let mut buffer = String::new();
         let graphemes = (0..32).map(|i|
             self.grapheme_at(floor_time(to) - Duration::minutes(i * 15))
@@ -104,11 +100,10 @@ fn even_full_hour(time: DateTime<UTC>) -> bool {
     time.minute() == 0 && time.hour() % 2 == 0
 }
 
-
 #[cfg(test)]
 mod tests {
     use chrono::*;
-    use super::Entry;
+    use entry::Entry;
     use super::Grapheme;
     use super::View;
 
@@ -151,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_render_eight_empty_hours() {
+    pub fn test_render_recent_eight_empty_hours() {
         let entries = vec!();
         let view = View::new(entries);
         let even_hour      = UTC.ymd(2015, 1, 15).and_hms(12,  0, 0);
@@ -159,11 +154,11 @@ mod tests {
         let even_hour_30   = UTC.ymd(2015, 1, 15).and_hms(12, 30, 0);
         let uneven_hour    = UTC.ymd(2015, 1, 15).and_hms(13,  0, 0);
         let uneven_hour_30 = UTC.ymd(2015, 1, 15).and_hms(13, 30, 0);
-        assert_eq!("-------|-------|-------|-------|".to_string(), view.render(even_hour));
-        assert_eq!("------|-------|-------|-------|-".to_string(), view.render(even_hour_15));
-        assert_eq!("-----|-------|-------|-------|--".to_string(), view.render(even_hour_30));
-        assert_eq!("---|-------|-------|-------|----".to_string(), view.render(uneven_hour));
-        assert_eq!("-|-------|-------|-------|------".to_string(), view.render(uneven_hour_30));
+        assert_eq!("-------|-------|-------|-------|".to_string(), view.render_recent(even_hour));
+        assert_eq!("------|-------|-------|-------|-".to_string(), view.render_recent(even_hour_15));
+        assert_eq!("-----|-------|-------|-------|--".to_string(), view.render_recent(even_hour_30));
+        assert_eq!("---|-------|-------|-------|----".to_string(), view.render_recent(uneven_hour));
+        assert_eq!("-|-------|-------|-------|------".to_string(), view.render_recent(uneven_hour_30));
     }
 
     #[test]
@@ -171,6 +166,6 @@ mod tests {
         let entry_date = UTC.ymd(2015, 1, 15).and_hms(11, 5, 30);
         let show_date  = UTC.ymd(2015, 1, 15).and_hms(12, 0,  0);
         let entries = vec!(Entry { at: entry_date, glucose: 7.0 } );
-        assert_eq!("       |       |       |   7---|".to_string(), View::new(entries).render(show_date));
+        assert_eq!("       |       |       |   7---|".to_string(), View::new(entries).render_recent(show_date));
     }
 }
