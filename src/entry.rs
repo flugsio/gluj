@@ -3,7 +3,7 @@ use xdg;
 use csv;
 
 use std::io::prelude::*;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::path::PathBuf;
 
 #[derive(Clone, Copy)]
@@ -13,6 +13,26 @@ pub struct Entry {
 }
 
 impl Entry {
+    pub fn parse(at: DateTime<UTC>, glucose: &str) -> Entry {
+        Entry {
+            at: at,
+            glucose: glucose.parse().unwrap(),
+        }
+    }
+
+    pub fn store(&self) {
+        let entry = (
+            self.at.with_timezone(&Local).format("%Y-%m-%dT%H:%M:%S%z").to_string(),
+            format!(" {:.1}", self.glucose)
+        );
+        let f = OpenOptions::new()
+            .append(true).open(Entry::data_path())
+            .unwrap();
+        let mut wtr = csv::Writer::from_writer(f);
+        wtr.encode(entry).unwrap();
+        wtr.flush().unwrap(); // flush is needed to ensure full write
+    }
+
     pub fn all() -> Vec<Entry> {
         let mut f = File::open(Entry::data_path()).unwrap();
         let mut data = String::new();
@@ -23,7 +43,7 @@ impl Entry {
         for row in rdr.decode() {
             let (date, glucose): (String, f32) = row.unwrap();
             list.push(Entry {
-                at: date.parse::<DateTime<UTC>>().unwrap(),
+                at: date.parse().unwrap(),
                 glucose: glucose,
             });
         }

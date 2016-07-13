@@ -16,12 +16,17 @@ fn main() {
             println!("gluj -h  Display this help");
         },
         Some(ref x) if x == "-m" => render_month(),
+        Some(ref x) => add(x),
         None => render_recent(),
-        Some(_) => {}
     }
 }
 
-pub fn render_month() {
+fn add(glucose: &str) {
+    let now = UTC::now();
+    entry::Entry::parse(now, glucose).store();
+}
+
+fn render_month() {
     let now = UTC::now();
     let graph = graph::View::new(entry::Entry::all());
     println!("           0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23");
@@ -31,7 +36,7 @@ pub fn render_month() {
     }
 }
 
-pub fn render_recent() {
+fn render_recent() {
     let now = UTC::now();
     let graph = graph::View::new(entry::Entry::all());
     println!("{}", graph.render_recent(now));
