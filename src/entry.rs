@@ -8,12 +8,12 @@ use std::path::PathBuf;
 
 #[derive(Clone, Copy)]
 pub struct Entry {
-    pub at: DateTime<UTC>,
+    pub at: DateTime<Utc>,
     pub glucose: f32,
 }
 
 impl Entry {
-    pub fn parse(at: DateTime<UTC>, glucose: &str) -> Entry {
+    pub fn parse(at: DateTime<Utc>, glucose: &str) -> Entry {
         Entry {
             at: at,
             glucose: glucose.parse().unwrap(),
@@ -29,7 +29,7 @@ impl Entry {
             .append(true).open(Entry::data_path())
             .unwrap();
         let mut wtr = csv::Writer::from_writer(f);
-        wtr.encode(entry).unwrap();
+        wtr.serialize(entry).unwrap();
         wtr.flush().unwrap(); // flush is needed to ensure full write
     }
 
@@ -38,9 +38,11 @@ impl Entry {
         let mut data = String::new();
         f.read_to_string(&mut data).unwrap();
 
-        let mut rdr = csv::Reader::from_string(data).has_headers(false);
+        let mut rdr = csv::ReaderBuilder::new()
+            .trim(csv::Trim::All)
+            .from_reader(data.as_bytes());
         let mut list = Vec::new();
-        for row in rdr.decode() {
+        for row in rdr.deserialize() {
             let (date, glucose): (String, f32) = row.unwrap();
             list.push(Entry {
                 at: date.parse().unwrap(),

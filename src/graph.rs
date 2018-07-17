@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use entry::Entry;
 
 pub struct View {
-    latest: Option<DateTime<UTC>>,
-    entries: HashMap<DateTime<UTC>, Vec<Entry>>,
+    latest: Option<DateTime<Utc>>,
+    entries: HashMap<DateTime<Utc>, Vec<Entry>>,
 }
 
 #[derive(Clone, Copy)]
@@ -50,7 +50,7 @@ impl View {
     }
 
     // TODO: refactor
-    pub fn render_day(&self, day: DateTime<UTC>) -> String {
+    pub fn render_day(&self, day: DateTime<Utc>) -> String {
         let mut buffer = String::new();
         let start = start_of_day(day);
         let entries = (0..(24*60/15-1)).map(|i|
@@ -62,7 +62,7 @@ impl View {
         return buffer;
     }
 
-    pub fn render_recent(&self, to: DateTime<UTC>) -> String {
+    pub fn render_recent(&self, to: DateTime<Utc>) -> String {
         let mut buffer = String::new();
         let graphemes = (0..32).map(|i|
             self.grapheme_at(floor_time(to) - Duration::minutes(i * 15))
@@ -73,7 +73,7 @@ impl View {
         return buffer;
     }
 
-    fn grapheme_at(&self, time: DateTime<UTC>) -> Grapheme {
+    fn grapheme_at(&self, time: DateTime<Utc>) -> Grapheme {
         match self.entries.get(&time) {
             Some(entry) => Grapheme::Glucose(entry.last().unwrap().glucose),
             None if even_full_hour(time) => Grapheme::Timeline,
@@ -86,17 +86,17 @@ impl View {
 
 }
 
-fn start_of_day(dt: DateTime<UTC>) -> DateTime<UTC> {
-    UTC.ymd(dt.year(), dt.month(), dt.day()).and_hms(2, 0, 0) // TODO: timezone
+fn start_of_day(dt: DateTime<Utc>) -> DateTime<Utc> {
+    Utc.ymd(dt.year(), dt.month(), dt.day()).and_hms(2, 0, 0) // TODO: timezone
 }
 
 /// Floor datetime down to nearest 15 minute block
-fn floor_time(dt: DateTime<UTC>) -> DateTime<UTC> {
+fn floor_time(dt: DateTime<Utc>) -> DateTime<Utc> {
     let minute = dt.minute() / 15 * 15;
-    UTC.ymd(dt.year(), dt.month(), dt.day()).and_hms(dt.hour(), minute, 0)
+    Utc.ymd(dt.year(), dt.month(), dt.day()).and_hms(dt.hour(), minute, 0)
 }
 
-fn even_full_hour(time: DateTime<UTC>) -> bool {
+fn even_full_hour(time: DateTime<Utc>) -> bool {
     time.minute() == 0 && time.hour() % 2 == 0
 }
 
@@ -138,8 +138,8 @@ mod tests {
 
     #[test]
     pub fn test_date_works() {
-        let dt1 = UTC.ymd(2015, 1, 15).and_hms(12, 0, 0);
-        let dt2 = UTC.ymd(2015, 1, 15).and_hms(12, 0, 2);
+        let dt1 = Utc.ymd(2015, 1, 15).and_hms(12, 0, 0);
+        let dt2 = Utc.ymd(2015, 1, 15).and_hms(12, 0, 2);
         let dt3 = dt2.with_second(0).unwrap();
         assert!(1i64 == 1);
         assert_eq!(dt1, dt3);
@@ -149,11 +149,11 @@ mod tests {
     pub fn test_render_recent_eight_empty_hours() {
         let entries = vec!();
         let view = View::new(entries);
-        let even_hour      = UTC.ymd(2015, 1, 15).and_hms(12,  0, 0);
-        let even_hour_15   = UTC.ymd(2015, 1, 15).and_hms(12, 15, 0);
-        let even_hour_30   = UTC.ymd(2015, 1, 15).and_hms(12, 30, 0);
-        let uneven_hour    = UTC.ymd(2015, 1, 15).and_hms(13,  0, 0);
-        let uneven_hour_30 = UTC.ymd(2015, 1, 15).and_hms(13, 30, 0);
+        let even_hour      = Utc.ymd(2015, 1, 15).and_hms(12,  0, 0);
+        let even_hour_15   = Utc.ymd(2015, 1, 15).and_hms(12, 15, 0);
+        let even_hour_30   = Utc.ymd(2015, 1, 15).and_hms(12, 30, 0);
+        let uneven_hour    = Utc.ymd(2015, 1, 15).and_hms(13,  0, 0);
+        let uneven_hour_30 = Utc.ymd(2015, 1, 15).and_hms(13, 30, 0);
         assert_eq!("-------|-------|-------|-------|".to_string(), view.render_recent(even_hour));
         assert_eq!("------|-------|-------|-------|-".to_string(), view.render_recent(even_hour_15));
         assert_eq!("-----|-------|-------|-------|--".to_string(), view.render_recent(even_hour_30));
@@ -163,8 +163,8 @@ mod tests {
 
     #[test]
     pub fn test_entry() {
-        let entry_date = UTC.ymd(2015, 1, 15).and_hms(11, 5, 30);
-        let show_date  = UTC.ymd(2015, 1, 15).and_hms(12, 0,  0);
+        let entry_date = Utc.ymd(2015, 1, 15).and_hms(11, 5, 30);
+        let show_date  = Utc.ymd(2015, 1, 15).and_hms(12, 0,  0);
         let entries = vec!(Entry { at: entry_date, glucose: 7.0 } );
         assert_eq!("       |       |       |   7---|".to_string(), View::new(entries).render_recent(show_date));
     }

@@ -22,12 +22,12 @@ fn main() {
 }
 
 fn add(glucose: &str) {
-    let now = UTC::now();
+    let now = Utc::now();
     entry::Entry::parse(now, glucose).store();
 }
 
 fn render_month() {
-    let now = UTC::now();
+    let now = Utc::now();
     let graph = graph::View::new(entry::Entry::all());
     println!("           0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23");
     for i in 0..30 {
@@ -37,7 +37,7 @@ fn render_month() {
 }
 
 fn render_recent() {
-    let now = UTC::now();
+    let now = Utc::now();
     let graph = graph::View::new(entry::Entry::all());
     println!("{}", graph.render_recent(now));
 }
