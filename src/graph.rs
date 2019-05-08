@@ -3,7 +3,7 @@ use std::fmt;
 use std::char;
 use std::collections::HashMap;
 
-use entry::Entry;
+use crate::entry::Entry;
 
 pub struct View {
     latest: Option<DateTime<Utc>>,
@@ -103,7 +103,7 @@ fn even_full_hour(time: DateTime<Utc>) -> bool {
 #[cfg(test)]
 mod tests {
     use chrono::*;
-    use entry::Entry;
+    use crate::entry::Entry;
     use super::Grapheme;
     use super::View;
 
