@@ -25,7 +25,7 @@ impl Entry {
             format!(" {:.1}", self.glucose)
         );
         let f = OpenOptions::new()
-            .append(true).open(Entry::data_path("glucose.csv"))
+            .append(true).open(Entry::data_path("new.csv"))
             .unwrap();
         let mut wtr = csv::Writer::from_writer(f);
         wtr.serialize(entry).unwrap();
