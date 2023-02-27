@@ -87,13 +87,13 @@ impl View {
 }
 
 fn start_of_day(dt: DateTime<Utc>) -> DateTime<Utc> {
-    Utc.ymd(dt.year(), dt.month(), dt.day()).and_hms(2, 0, 0) // TODO: timezone
+    Utc.with_ymd_and_hms(dt.year(), dt.month(), dt.day(), 2, 0, 0).unwrap() // TODO: timezone
 }
 
 /// Floor datetime down to nearest 15 minute block
 fn floor_time(dt: DateTime<Utc>) -> DateTime<Utc> {
     let minute = dt.minute() / 15 * 15;
-    Utc.ymd(dt.year(), dt.month(), dt.day()).and_hms(dt.hour(), minute, 0)
+    Utc.with_ymd_and_hms(dt.year(), dt.month(), dt.day(), dt.hour(), minute, 0).unwrap()
 }
 
 fn even_full_hour(time: DateTime<Utc>) -> bool {
